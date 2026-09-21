@@ -2,13 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { errorHandler } from './middlewares/errorHandler';
+import { corsOptions } from './config/cors';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/health', (req, res) => {
