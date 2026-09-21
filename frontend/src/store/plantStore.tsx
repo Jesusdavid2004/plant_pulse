@@ -1,5 +1,6 @@
-import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { Plant, plantService } from '../services/plantService';
+import { createContext, useContext, useReducer, ReactNode, useCallback } from 'react';
+import { plantService } from '../services/plantService';
+import type { Plant } from '../services/plantService';
 
 interface PlantState {
   plants: Plant[];
@@ -67,7 +68,7 @@ const PlantContext = createContext<PlantContextType | undefined>(undefined);
 export const PlantProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(plantReducer, initialState);
 
-  const fetchPlants = async () => {
+  const fetchPlants = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     const response = await plantService.getAll();
     if (response.success && response.data) {
@@ -75,9 +76,9 @@ export const PlantProvider = ({ children }: { children: ReactNode }) => {
     } else {
       dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to fetch plants' });
     }
-  };
+  }, []);
 
-  const fetchPlant = async (id: string) => {
+  const fetchPlant = useCallback(async (id: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     const response = await plantService.getById(id);
     if (response.success && response.data) {
@@ -85,21 +86,21 @@ export const PlantProvider = ({ children }: { children: ReactNode }) => {
     } else {
       dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to fetch plant' });
     }
-  };
+  }, []);
 
-  const createPlant = async (data: { name: string; species?: string; userId: string }) => {
+  const createPlant = useCallback(async (data: { name: string; species?: string; userId: string }) => {
     const response = await plantService.create(data);
     if (response.success && response.data) {
       dispatch({ type: 'ADD_PLANT', payload: response.data });
     }
-  };
+  }, []);
 
-  const deletePlant = async (id: string) => {
+  const deletePlant = useCallback(async (id: string) => {
     const response = await plantService.delete(id);
     if (response.success) {
       dispatch({ type: 'DELETE_PLANT', payload: id });
     }
-  };
+  }, []);
 
   return (
     <PlantContext.Provider value={{ state, dispatch, fetchPlants, fetchPlant, createPlant, deletePlant }}>
