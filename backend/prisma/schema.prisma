@@ -13,3 +13,48 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  plants    Plant[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Plant {
+  id         String     @id @default(uuid())
+  name       String
+  species    String?
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  images     Image[]
+  analyses   Analysis[]
+  status     String     @default("active")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  plantId   String
+  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  url       String
+  dayLabel  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model Analysis {
+  id           String   @id @default(uuid())
+  plantId      String
+  plant        Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  healthScore  Int
+  status       String
+  diagnosis    String
+  prognosis    String?
+  carePlan     Json
+  createdAt    DateTime @default(now())
+}
