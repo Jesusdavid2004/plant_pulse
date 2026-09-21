@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "PlantPulse",
+    "tagline": "AI-powered plant health monitoring"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "about": "About"
+  },
+  "home": {
+    "title": "Monitor Your Plants with AI",
+    "subtitle": "Capture, analyze, and improve your plant health",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "myPlants": "My Plants",
+    "addPlant": "Add Plant",
+    "noPlants": "No plants yet. Add your first plant to get started."
+  },
+  "plant": {
+    "name": "Plant Name",
+    "species": "Species",
+    "status": "Status",
+    "healthScore": "Health Score",
+    "day1": "Day 1",
+    "day3": "Day 3",
+    "day7": "Day 7",
+    "captureImage": "Capture Image",
+    "uploadImage": "Upload Image",
+    "analyze": "Analyze",
+    "diagnosis": "Diagnosis",
+    "prognosis": "Prognosis",
+    "carePlan": "Care Plan"
+  },
+  "status": {
+    "healthy": "Healthy",
+    "warning": "Warning",
+    "critical": "Critical",
+    "active": "Active"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode"
+  }
+}

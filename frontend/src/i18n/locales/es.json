@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "PlantPulse",
+    "tagline": "Monitoreo de salud de plantas con IA"
+  },
+  "nav": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "about": "Acerca de"
+  },
+  "home": {
+    "title": "Monitorea Tus Plantas con IA",
+    "subtitle": "Captura, analiza y mejora la salud de tus plantas",
+    "getStarted": "Comenzar",
+    "learnMore": "Saber Mas"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "myPlants": "Mis Plantas",
+    "addPlant": "Agregar Planta",
+    "noPlants": "No tienes plantas aun. Agrega tu primera planta para comenzar."
+  },
+  "plant": {
+    "name": "Nombre de la Planta",
+    "species": "Especie",
+    "status": "Estado",
+    "healthScore": "Puntuacion de Salud",
+    "day1": "Dia 1",
+    "day3": "Dia 3",
+    "day7": "Dia 7",
+    "captureImage": "Capturar Imagen",
+    "uploadImage": "Subir Imagen",
+    "analyze": "Analizar",
+    "diagnosis": "Diagnostico",
+    "prognosis": "Pronostico",
+    "carePlan": "Plan de Cuidado"
+  },
+  "status": {
+    "healthy": "Saludable",
+    "warning": "Advertencia",
+    "critical": "Critico",
+    "active": "Activo"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "loading": "Cargando...",
+    "error": "Ocurrio un error",
+    "success": "Exito"
+  },
+  "theme": {
+    "light": "Modo Claro",
+    "dark": "Modo Oscuro"
+  }
+}
