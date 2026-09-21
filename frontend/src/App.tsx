@@ -4,19 +4,22 @@ import Dashboard from './pages/Dashboard';
 import PlantDetail from './pages/PlantDetail';
 import Layout from './components/Layout';
 import { ThemeProvider } from './components/ThemeProvider';
+import { PlantProvider } from './store/plantStore';
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/plants/:id" element={<PlantDetail />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <PlantProvider>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/plants/:id" element={<PlantDetail />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </PlantProvider>
     </ThemeProvider>
   );
 }
