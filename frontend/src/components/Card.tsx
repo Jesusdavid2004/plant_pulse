@@ -9,7 +9,7 @@ interface CardProps {
 const Card = ({ children, className = '', onClick }: CardProps) => {
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden transition-shadow hover:shadow-lg ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`bg-[var(--color-surface)] rounded-2xl shadow-lg border border-[var(--color-border)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
@@ -23,7 +23,7 @@ interface CardHeaderProps {
 }
 
 export const CardHeader = ({ children, className = '' }: CardHeaderProps) => (
-  <div className={`px-6 py-4 border-b border-gray-200 dark:border-gray-700 ${className}`}>
+  <div className={`px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-hover)] ${className}`}>
     {children}
   </div>
 );
@@ -43,7 +43,7 @@ interface CardFooterProps {
 }
 
 export const CardFooter = ({ children, className = '' }: CardFooterProps) => (
-  <div className={`px-6 py-4 border-t border-gray-200 dark:border-gray-700 ${className}`}>
+  <div className={`px-6 py-4 border-t border-[var(--color-border)] bg-[var(--color-surface-hover)] ${className}`}>
     {children}
   </div>
 );
