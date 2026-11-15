@@ -8,6 +8,7 @@ export interface PlantSummary {
   careCategory: string | null;
   petTraits: PetTraits;
   status: string;
+  latestHealthScore: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

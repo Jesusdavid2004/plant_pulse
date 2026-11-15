@@ -16,9 +16,14 @@ interface PlantRow {
   careCategory: string | null;
   petTraits: unknown;
   status: string;
+  analyses: { healthScore: number }[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const WITH_LATEST_ANALYSIS = {
+  analyses: { select: { healthScore: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+} as const;
 
 function toSummary(row: PlantRow): PlantSummary {
   return {
@@ -29,6 +34,7 @@ function toSummary(row: PlantRow): PlantSummary {
     careCategory: row.careCategory,
     petTraits: parsePetTraits(row.petTraits),
     status: row.status,
+    latestHealthScore: row.analyses[0]?.healthScore ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -47,6 +53,7 @@ export class PrismaPlantRepository implements PlantRepository {
         careCategory: plant.careCategory,
         petTraits: { ...plant.petTraits },
       },
+      include: WITH_LATEST_ANALYSIS,
     });
     return toSummary(row);
   }
@@ -54,13 +61,17 @@ export class PrismaPlantRepository implements PlantRepository {
   async listByOwner(ownerId: string): Promise<PlantSummary[]> {
     const rows = await this.prisma.plant.findMany({
       where: { userId: ownerId },
+      include: WITH_LATEST_ANALYSIS,
       orderBy: { createdAt: 'desc' },
     });
     return rows.map(toSummary);
   }
 
   async findByIdForOwner(plantId: string, ownerId: string): Promise<PlantSummary | null> {
-    const row = await this.prisma.plant.findFirst({ where: { id: plantId, userId: ownerId } });
+    const row = await this.prisma.plant.findFirst({
+      where: { id: plantId, userId: ownerId },
+      include: WITH_LATEST_ANALYSIS,
+    });
     return row ? toSummary(row) : null;
   }
 
