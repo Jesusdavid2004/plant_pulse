@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { DomainError } from '../domain/care/errors';
 
 export class AppError extends Error {
   statusCode: number;
@@ -18,6 +19,15 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  if (err instanceof DomainError) {
+    return res.status(err.httpStatus).json({
+      success: false,
+      error: err.message,
+      code: err.code,
+      message_key: err.messageKey,
+    });
+  }
+
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
