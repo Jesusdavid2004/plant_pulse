@@ -1,28 +1,28 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { errorHandler } from './middlewares/errorHandler';
-import { corsOptions } from './config/cors';
-import routes from './routes';
+import { PrismaClient } from './generated/prisma/client.js';
+import { buildContainer } from './container';
+import { createApp } from './presentation/http/app';
+import { config } from './shared/config';
+import { logger } from './shared/logger';
 
-dotenv.config();
+async function main(): Promise<void> {
+  const prisma = new PrismaClient();
+  const container = await buildContainer(prisma, config);
+  const app = createApp(container, config);
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  const server = app.listen(config.port, () => {
+    logger.info({ port: config.port, env: config.env }, 'PlantPulse API listening');
+  });
 
-app.use(cors(corsOptions));
-app.use(express.json());
+  const shutdown = (): void => {
+    server.close(() => {
+      void prisma.$disconnect().finally(() => process.exit(0));
+    });
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+main().catch((error: unknown) => {
+  logger.fatal({ err: error }, 'Failed to start the API');
+  process.exit(1);
 });
-
-app.use('/api', routes);
-
-app.use(errorHandler);
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-export default app;
