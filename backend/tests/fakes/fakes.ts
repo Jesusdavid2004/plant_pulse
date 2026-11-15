@@ -1,6 +1,6 @@
 import { CareProfile } from '../../src/domain/care/CareProfile';
-import { CareType } from '../../src/domain/care/CareType';
-import {
+import type { CareType } from '../../src/domain/care/CareType';
+import type {
   CareEventRepository,
   Clock,
   PlantReader,
@@ -15,10 +15,16 @@ export class FixedClock implements Clock {
   }
 }
 
-export class InMemoryPlantReader implements PlantReader {
-  constructor(private readonly plants: PlantRecord[]) {}
+export const OWNER_ID = 'owner-1';
 
-  async findById(plantId: string): Promise<PlantRecord | null> {
+export class InMemoryPlantReader implements PlantReader {
+  constructor(
+    private readonly plants: PlantRecord[],
+    private readonly ownerId: string = OWNER_ID,
+  ) {}
+
+  async findByIdForOwner(plantId: string, ownerId: string): Promise<PlantRecord | null> {
+    if (ownerId !== this.ownerId) return null;
     return this.plants.find((plant) => plant.id === plantId) ?? null;
   }
 }

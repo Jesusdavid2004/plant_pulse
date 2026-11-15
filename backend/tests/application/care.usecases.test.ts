@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { GetPlantMoodUseCase } from '../../src/application/care/GetPlantMoodUseCase';
 import { LogCareEventUseCase } from '../../src/application/care/LogCareEventUseCase';
 import { CareType } from '../../src/domain/care/CareType';
-import { InvalidCareTypeError, PlantNotFoundError } from '../../src/domain/care/errors';
+import { InvalidCareTypeError, PlantNotFoundError } from '../../src/domain/errors';
 import { Mood } from '../../src/domain/care/PlantMood';
 import {
   buildPlant,
   FixedClock,
   InMemoryCareEventRepository,
   InMemoryPlantReader,
+  OWNER_ID,
 } from '../fakes/fakes';
 
 const NOW = new Date('2026-11-15T12:00:00Z');
@@ -28,7 +29,7 @@ describe('LogCareEventUseCase', () => {
   it('records a watering at the current time', async () => {
     const { logCare, careEvents } = setup();
 
-    const result = await logCare.execute({ plantId: 'plant-1', type: 'WATER' });
+    const result = await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
 
     expect(result.occurredAt).toEqual(NOW);
     expect(careEvents.events).toEqual([
@@ -39,17 +40,31 @@ describe('LogCareEventUseCase', () => {
   it('rejects an unknown care type', async () => {
     const { logCare } = setup();
 
-    await expect(logCare.execute({ plantId: 'plant-1', type: 'DANCE' })).rejects.toBeInstanceOf(
-      InvalidCareTypeError,
-    );
+    await expect(
+      logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'DANCE' }),
+    ).rejects.toBeInstanceOf(InvalidCareTypeError);
   });
 
   it('rejects care for a plant that does not exist', async () => {
     const { logCare, careEvents } = setup();
 
-    await expect(logCare.execute({ plantId: 'missing', type: 'WATER' })).rejects.toBeInstanceOf(
-      PlantNotFoundError,
-    );
+    await expect(
+      logCare.execute({ plantId: 'missing', ownerId: OWNER_ID, type: 'WATER' }),
+    ).rejects.toBeInstanceOf(PlantNotFoundError);
+    expect(careEvents.events).toHaveLength(0);
+  });
+});
+
+describe('plant ownership', () => {
+  it('does not let another user log care or read the mood of a plant', async () => {
+    const { logCare, getMood, careEvents } = setup();
+
+    await expect(
+      logCare.execute({ plantId: 'plant-1', ownerId: 'intruder', type: 'WATER' }),
+    ).rejects.toBeInstanceOf(PlantNotFoundError);
+    await expect(
+      getMood.execute({ plantId: 'plant-1', ownerId: 'intruder' }),
+    ).rejects.toBeInstanceOf(PlantNotFoundError);
     expect(careEvents.events).toHaveLength(0);
   });
 });
@@ -58,24 +73,24 @@ describe('GetPlantMoodUseCase', () => {
   it('turns a neglected plant sad and makes it happy again after care is logged', async () => {
     const { getMood, logCare } = setup();
 
-    const neglected = await getMood.execute({ plantId: 'plant-1' });
+    const neglected = await getMood.execute({ plantId: 'plant-1', ownerId: OWNER_ID });
     expect(neglected.mood).toBe(Mood.SAD);
 
-    await logCare.execute({ plantId: 'plant-1', type: 'WATER' });
-    await logCare.execute({ plantId: 'plant-1', type: 'SUN' });
-    await logCare.execute({ plantId: 'plant-1', type: 'FERTILIZE' });
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'SUN' });
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'FERTILIZE' });
 
-    const cared = await getMood.execute({ plantId: 'plant-1' });
+    const cared = await getMood.execute({ plantId: 'plant-1', ownerId: OWNER_ID });
     expect(cared.mood).toBe(Mood.HAPPY);
   });
 
   it('reports a sick plant when the latest analysis score is low', async () => {
     const { getMood, logCare } = setup(20);
-    await logCare.execute({ plantId: 'plant-1', type: 'WATER' });
-    await logCare.execute({ plantId: 'plant-1', type: 'SUN' });
-    await logCare.execute({ plantId: 'plant-1', type: 'FERTILIZE' });
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'SUN' });
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'FERTILIZE' });
 
-    const result = await getMood.execute({ plantId: 'plant-1' });
+    const result = await getMood.execute({ plantId: 'plant-1', ownerId: OWNER_ID });
 
     expect(result.mood).toBe(Mood.SICK);
   });
@@ -83,7 +98,7 @@ describe('GetPlantMoodUseCase', () => {
   it('rejects a plant that does not exist', async () => {
     const { getMood } = setup();
 
-    await expect(getMood.execute({ plantId: 'missing' })).rejects.toBeInstanceOf(
+    await expect(getMood.execute({ plantId: 'missing', ownerId: OWNER_ID })).rejects.toBeInstanceOf(
       PlantNotFoundError,
     );
   });
