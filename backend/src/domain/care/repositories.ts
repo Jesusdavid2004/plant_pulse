@@ -1,5 +1,5 @@
-import { CareProfile } from './CareProfile';
-import { CareType } from './CareType';
+import type { CareProfile } from './CareProfile';
+import type { CareType } from './CareType';
 
 export interface PlantRecord {
   id: string;
@@ -9,7 +9,7 @@ export interface PlantRecord {
 }
 
 export interface PlantReader {
-  findById(plantId: string): Promise<PlantRecord | null>;
+  findByIdForOwner(plantId: string, ownerId: string): Promise<PlantRecord | null>;
 }
 
 export interface CareEventRepository {

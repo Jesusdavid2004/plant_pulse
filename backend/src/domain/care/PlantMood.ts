@@ -1,5 +1,5 @@
-import { CareProfile } from './CareProfile';
-import { CARE_TYPES, CareType } from './CareType';
+import type { CareProfile } from './CareProfile';
+import { CARE_TYPES, type CareType } from './CareType';
 
 export enum NeedLevel {
   SATISFIED = 'SATISFIED',
