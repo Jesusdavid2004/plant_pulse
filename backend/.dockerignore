@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+uploads
+.env
+.env.*
+!.env.example
+tests
+scripts
+src/generated
+*.log
+.git
