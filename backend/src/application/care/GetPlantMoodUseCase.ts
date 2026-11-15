@@ -1,9 +1,10 @@
-import { PlantNotFoundError } from '../../domain/care/errors';
-import { computePlantMood, PlantMoodSnapshot } from '../../domain/care/PlantMood';
-import { CareEventRepository, Clock, PlantReader } from '../../domain/care/repositories';
+import { computePlantMood, type PlantMoodSnapshot } from '../../domain/care/PlantMood';
+import type { CareEventRepository, Clock, PlantReader } from '../../domain/care/repositories';
+import { PlantNotFoundError } from '../../domain/errors';
 
 export interface GetPlantMoodInput {
   plantId: string;
+  ownerId: string;
 }
 
 export type GetPlantMoodOutput = PlantMoodSnapshot & { plantId: string };
@@ -16,7 +17,7 @@ export class GetPlantMoodUseCase {
   ) {}
 
   async execute(input: GetPlantMoodInput): Promise<GetPlantMoodOutput> {
-    const plant = await this.plants.findById(input.plantId);
+    const plant = await this.plants.findByIdForOwner(input.plantId, input.ownerId);
     if (!plant) throw new PlantNotFoundError();
 
     const lastCareAt = await this.careEvents.findLastCareDates(plant.id);

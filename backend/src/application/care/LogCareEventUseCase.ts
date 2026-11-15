@@ -1,9 +1,10 @@
-import { CareType, isCareType } from '../../domain/care/CareType';
-import { InvalidCareTypeError, PlantNotFoundError } from '../../domain/care/errors';
-import { CareEventRepository, Clock, PlantReader } from '../../domain/care/repositories';
+import { isCareType, type CareType } from '../../domain/care/CareType';
+import type { CareEventRepository, Clock, PlantReader } from '../../domain/care/repositories';
+import { InvalidCareTypeError, PlantNotFoundError } from '../../domain/errors';
 
 export interface LogCareEventInput {
   plantId: string;
+  ownerId: string;
   type: string;
 }
 
@@ -23,7 +24,7 @@ export class LogCareEventUseCase {
   async execute(input: LogCareEventInput): Promise<LogCareEventOutput> {
     if (!isCareType(input.type)) throw new InvalidCareTypeError();
 
-    const plant = await this.plants.findById(input.plantId);
+    const plant = await this.plants.findByIdForOwner(input.plantId, input.ownerId);
     if (!plant) throw new PlantNotFoundError();
 
     const occurredAt = this.clock.now();
