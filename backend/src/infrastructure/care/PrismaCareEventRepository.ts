@@ -1,6 +1,6 @@
-import { PrismaClient } from '../../generated/prisma/client.js';
-import { CareType } from '../../domain/care/CareType';
-import { CareEventRepository } from '../../domain/care/repositories';
+import type { PrismaClient } from '../../generated/prisma/client.js';
+import type { CareType } from '../../domain/care/CareType';
+import type { CareEventRepository } from '../../domain/care/repositories';
 
 export class PrismaCareEventRepository implements CareEventRepository {
   constructor(private readonly prisma: PrismaClient) {}

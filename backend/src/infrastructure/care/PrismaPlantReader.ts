@@ -1,16 +1,17 @@
-import { PrismaClient } from '../../generated/prisma/client.js';
-import { CareProfile } from '../../domain/care/CareProfile';
-import { PlantReader, PlantRecord } from '../../domain/care/repositories';
+import type { PrismaClient } from '../../generated/prisma/client.js';
+import { careProfileForCategory } from '../../domain/care/CareCatalog';
+import type { PlantReader, PlantRecord } from '../../domain/care/repositories';
 
 export class PrismaPlantReader implements PlantReader {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async findById(plantId: string): Promise<PlantRecord | null> {
-    const plant = await this.prisma.plant.findUnique({
-      where: { id: plantId },
+  async findByIdForOwner(plantId: string, ownerId: string): Promise<PlantRecord | null> {
+    const plant = await this.prisma.plant.findFirst({
+      where: { id: plantId, userId: ownerId },
       select: {
         id: true,
         createdAt: true,
+        careCategory: true,
         analyses: { select: { healthScore: true }, orderBy: { createdAt: 'desc' }, take: 1 },
       },
     });
@@ -19,7 +20,7 @@ export class PrismaPlantReader implements PlantReader {
     return {
       id: plant.id,
       createdAt: plant.createdAt,
-      careProfile: CareProfile.default(),
+      careProfile: careProfileForCategory(plant.careCategory),
       latestHealthScore: plant.analyses[0]?.healthScore ?? null,
     };
   }
