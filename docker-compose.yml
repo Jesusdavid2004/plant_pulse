@@ -1,0 +1,56 @@
+# Local development stack: PostgreSQL + API + web app (nginx serving the built frontend and proxying /api).
+# The frontend lives in its own repository: clone it into ./frontend (or set FRONTEND_CONTEXT).
+
+name: plantpulse
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: plantpulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plantpulse}
+      POSTGRES_DB: plantpulse
+    ports:
+      - '${DB_PORT:-5433}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U plantpulse -d plantpulse']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://plantpulse:${POSTGRES_PASSWORD:-plantpulse}@db:5432/plantpulse
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-me-0123456789}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+      COOKIE_SECURE: 'false'
+      AI_PROVIDER: ${AI_PROVIDER:-fake}
+      AI_FALLBACK_PROVIDER: ${AI_FALLBACK_PROVIDER:-none}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    ports:
+      - '${BACKEND_PORT:-3300}:3000'
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ${FRONTEND_CONTEXT:-./frontend}
+    environment:
+      BACKEND_URL: http://backend:3000
+    ports:
+      - '${FRONTEND_PORT:-5173}:8080'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  uploads:
