@@ -15,27 +15,44 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  plants    Plant[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String?
+  plants        Plant[]
+  refreshTokens RefreshToken[]
+  aiUsage       AiUsageLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model Plant {
-  id         String     @id @default(uuid())
-  name       String
-  species    String?
-  userId     String
-  user       User       @relation(fields: [userId], references: [id])
-  images     Image[]
-  analyses   Analysis[]
-  careEvents CareEvent[]
-  status     String     @default("active")
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id           String      @id @default(uuid())
+  name         String
+  species      String?
+  commonName   String?
+  careCategory String?
+  petTraits    Json?
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  images       Image[]
+  analyses     Analysis[]
+  careEvents   CareEvent[]
+  status       String      @default("active")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Image {
@@ -49,15 +66,15 @@ model Image {
 }
 
 model Analysis {
-  id           String   @id @default(uuid())
-  plantId      String
-  plant        Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  healthScore  Int
-  status       String
-  diagnosis    String
-  prognosis    String?
-  carePlan     Json
-  createdAt    DateTime @default(now())
+  id          String   @id @default(uuid())
+  plantId     String
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  healthScore Int
+  status      String
+  diagnosis   String
+  prognosis   String?
+  carePlan    Json
+  createdAt   DateTime @default(now())
 }
 
 enum CareType {
@@ -74,4 +91,25 @@ model CareEvent {
   occurredAt DateTime
 
   @@index([plantId, type, occurredAt])
+}
+
+model AiUsageLog {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String
+  model         String
+  promptVersion String
+  inputTokens   Int
+  outputTokens  Int
+  latencyMs     Int
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model AiCache {
+  key       String   @id
+  payload   Json
+  createdAt DateTime @default(now())
 }
