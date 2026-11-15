@@ -14,6 +14,7 @@ const DEFAULT_AUTH_RATE_LIMIT = 20;
 const DEFAULT_AI_RATE_LIMIT = 10;
 const DEFAULT_GENERAL_RATE_LIMIT = 300;
 const MIN_JWT_SECRET_LENGTH = 32;
+const DEFAULT_TRUST_PROXY_HOPS = 1;
 
 const booleanFromString = z.enum(['true', 'false']).transform((value) => value === 'true');
 
@@ -23,6 +24,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.string().min(1),
   CORS_ORIGIN: z.string().min(1).default('http://localhost:5173'),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(DEFAULT_TRUST_PROXY_HOPS),
   JWT_SECRET: z.string().min(MIN_JWT_SECRET_LENGTH),
   ACCESS_TOKEN_MINUTES: z.coerce.number().int().positive().default(DEFAULT_ACCESS_TOKEN_MINUTES),
   REFRESH_TOKEN_DAYS: z.coerce.number().int().positive().default(DEFAULT_REFRESH_TOKEN_DAYS),
@@ -61,6 +63,7 @@ export function buildConfig(source: NodeJS.ProcessEnv) {
     logLevel: env.LOG_LEVEL,
     databaseUrl: env.DATABASE_URL,
     corsOrigin: env.CORS_ORIGIN,
+    trustProxyHops: isProduction ? env.TRUST_PROXY_HOPS : 0,
     auth: {
       jwtSecret: env.JWT_SECRET,
       accessTokenMinutes: env.ACCESS_TOKEN_MINUTES,

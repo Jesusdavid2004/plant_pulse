@@ -16,7 +16,7 @@ export function createApp(container: Container, config: AppConfig): Express {
   const app = express();
   const limiters = createRateLimiters(config.rateLimit);
 
-  app.set('trust proxy', config.isProduction ? 1 : false);
+  app.set('trust proxy', config.trustProxyHops);
   app.use(helmet());
   app.use(cors({ origin: config.corsOrigin, credentials: true }));
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/health' } }));
