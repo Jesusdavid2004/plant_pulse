@@ -1,7 +1,19 @@
+import type { Locale } from '../../shared/constants';
 import type { UserRecord } from './types';
 
+export interface UserPreferencesChange {
+  emailNotifications?: boolean;
+  locale?: Locale;
+}
+
 export interface UserRepository {
-  create(email: string, passwordHash: string, name: string | null): Promise<UserRecord>;
+  create(
+    email: string,
+    passwordHash: string,
+    name: string | null,
+    locale: Locale,
+  ): Promise<UserRecord>;
+  updatePreferences(userId: string, changes: UserPreferencesChange): Promise<UserRecord>;
   findByEmail(email: string): Promise<UserRecord | null>;
   findById(userId: string): Promise<UserRecord | null>;
   delete(userId: string): Promise<void>;

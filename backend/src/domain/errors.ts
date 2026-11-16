@@ -162,3 +162,83 @@ export class RateLimitedError extends DomainError {
     super('Too many requests');
   }
 }
+
+export class InvalidGameError extends DomainError {
+  readonly code = 'INVALID_GAME';
+  readonly messageKey = 'errors.invalidGame';
+  readonly httpStatus = HTTP_STATUS.BAD_REQUEST;
+
+  constructor() {
+    super('Unknown game');
+  }
+}
+
+export class UnknownCatalogItemError extends DomainError {
+  readonly code = 'UNKNOWN_CATALOG_ITEM';
+  readonly messageKey = 'errors.unknownCatalogItem';
+  readonly httpStatus = HTTP_STATUS.BAD_REQUEST;
+
+  constructor() {
+    super('Unknown scene or pot');
+  }
+}
+
+export class SceneLockedError extends DomainError {
+  readonly code = 'SCENE_LOCKED';
+  readonly messageKey = 'errors.sceneLocked';
+  readonly httpStatus = HTTP_STATUS.CONFLICT;
+
+  constructor() {
+    super('Scene is not unlocked yet');
+  }
+}
+
+export class ItemNotOwnedError extends DomainError {
+  readonly code = 'ITEM_NOT_OWNED';
+  readonly messageKey = 'errors.itemNotOwned';
+  readonly httpStatus = HTTP_STATUS.CONFLICT;
+
+  constructor() {
+    super('Item has not been purchased');
+  }
+}
+
+export class ItemAlreadyOwnedError extends DomainError {
+  readonly code = 'ITEM_ALREADY_OWNED';
+  readonly messageKey = 'errors.itemAlreadyOwned';
+  readonly httpStatus = HTTP_STATUS.CONFLICT;
+
+  constructor() {
+    super('Item is already owned');
+  }
+}
+
+export class InsufficientCoinsError extends DomainError {
+  readonly code = 'INSUFFICIENT_COINS';
+  readonly messageKey = 'errors.insufficientCoins';
+  readonly httpStatus = HTTP_STATUS.CONFLICT;
+
+  constructor() {
+    super('Not enough coins');
+  }
+}
+
+export class ConcurrentUpdateError extends DomainError {
+  readonly code = 'CONCURRENT_UPDATE';
+  readonly messageKey = 'errors.concurrentUpdate';
+  readonly httpStatus = HTTP_STATUS.CONFLICT;
+
+  constructor() {
+    super('The plant was modified by another request');
+  }
+}
+
+export class InvalidUnsubscribeTokenError extends DomainError {
+  readonly code = 'INVALID_UNSUBSCRIBE_TOKEN';
+  readonly messageKey = 'errors.invalidUnsubscribeToken';
+  readonly httpStatus = HTTP_STATUS.BAD_REQUEST;
+
+  constructor() {
+    super('Invalid unsubscribe token');
+  }
+}
