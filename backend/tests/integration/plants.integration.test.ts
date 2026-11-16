@@ -56,9 +56,11 @@ describe('POST /api/plants (register a plant from a photo)', () => {
     expect(plant.name).toBe('Monstera');
     expect(plant.species).toBe('Monstera deliciosa');
     expect(plant.petTraits).toEqual({
+      growthForm: 'STALKED',
       leafShape: 'HEART',
       leafCount: 5,
       leafColor: 'DARK_GREEN',
+      leafPattern: 'VEINED',
       bloomShape: 'NONE',
       bloomColor: 'PINK',
     });

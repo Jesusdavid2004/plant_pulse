@@ -15,7 +15,7 @@ import {
   buildPlantAnalysisUserPrompt,
   PLANT_ANALYSIS_PROMPT_VERSION,
   PLANT_ANALYSIS_SCHEMA_NAME,
-} from './prompts/plantAnalysis.v2';
+} from './prompts/plantAnalysis.v3';
 
 export interface PlantPhotoAnalysis {
   image: ProcessedImage;
@@ -79,9 +79,11 @@ export class PlantPhotoAnalyzer {
         careCategory: data.careCategory,
       },
       petTraits: buildPetTraits({
+        growthForm: data.growthForm,
         leafShape: data.leafShape,
         leafCount: data.leafCount,
         leafColor: data.leafColor,
+        leafPattern: data.leafPattern,
         bloomShape: data.bloomShape,
         bloomColor: data.bloomColor,
       }),

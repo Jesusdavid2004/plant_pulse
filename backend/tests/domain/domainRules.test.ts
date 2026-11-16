@@ -83,13 +83,22 @@ describe('PetTraits', () => {
 
   it('keeps valid stored traits including color and bloom', () => {
     const stored = {
-      leafShape: 'GRASS',
+      growthForm: 'UPRIGHT',
+      leafShape: 'SWORD',
       leafCount: 6,
       leafColor: 'DARK_GREEN',
-      bloomShape: 'SPIKE',
-      bloomColor: 'PINK',
+      leafPattern: 'STRIPED',
+      bloomShape: 'SPATHE',
+      bloomColor: 'WHITE',
     };
     expect(parsePetTraits(stored)).toEqual(stored);
+  });
+
+  it('keeps the default silhouette for plants stored before growth forms existed', () => {
+    const parsed = parsePetTraits({ leafShape: 'GRASS', leafCount: 6, leafColor: 'GREEN' });
+
+    expect(parsed.growthForm).toBe(DEFAULT_PET_TRAITS.growthForm);
+    expect(parsed.leafPattern).toBe(DEFAULT_PET_TRAITS.leafPattern);
   });
 
   it('upgrades traits stored before color and bloom existed', () => {

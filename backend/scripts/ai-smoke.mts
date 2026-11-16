@@ -8,7 +8,7 @@ import {
   buildPlantAnalysisUserPrompt,
   PLANT_ANALYSIS_PROMPT_VERSION,
   PLANT_ANALYSIS_SCHEMA_NAME,
-} from '../src/application/ai/prompts/plantAnalysis.v2';
+} from '../src/application/ai/prompts/plantAnalysis.v3';
 
 const [imagePath, localeArg = 'en'] = process.argv.slice(2);
 if (!imagePath || (localeArg !== 'en' && localeArg !== 'es')) {

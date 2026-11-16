@@ -44,7 +44,7 @@ backend/src
 2. `PlantPhotoAnalyzer` sends the image to an `AIProvider` and asks for **structured JSON** that is validated
    with a zod schema. If validation fails it retries once with the validation error appended, then fails with a
    typed `AIResponseInvalidError`.
-3. The model only **classifies what it sees** (species, care category, leaf shape, leaf color, bloom shape and color, health condition and
+3. The model only **classifies what it sees** (species, care category, growth form such as rosette, upright, palm, tree, cactus or trailing, leaf shape, pattern and color, bloom shape and color, health condition and
    severity) and explains it in the active language. **Numbers and decisions come from domain rules**: the
    health score comes from `assessHealth`, the care intervals from `careCatalog`, the mood from
    `computePlantMood`.

@@ -4,7 +4,9 @@ import { HEALTH_CONDITIONS, SEVERITIES } from '../../domain/plants/HealthAssessm
 import {
   BLOOM_COLORS,
   BLOOM_SHAPES,
+  GROWTH_FORMS,
   LEAF_COLORS,
+  LEAF_PATTERNS,
   LEAF_SHAPES,
 } from '../../domain/plants/PetTraits';
 
@@ -22,9 +24,11 @@ export const plantAnalysisSchema = z.object({
   commonName: z.string().min(1).max(MAX_NAME_LENGTH),
   scientificName: z.string().max(MAX_SCIENTIFIC_NAME_LENGTH).nullable(),
   careCategory: z.enum(CARE_CATEGORIES),
+  growthForm: z.enum(GROWTH_FORMS),
   leafShape: z.enum(LEAF_SHAPES),
   leafCount: z.number().int().min(1).max(MAX_VISIBLE_LEAVES),
   leafColor: z.enum(LEAF_COLORS),
+  leafPattern: z.enum(LEAF_PATTERNS),
   bloomShape: z.enum(BLOOM_SHAPES),
   bloomColor: z.enum(BLOOM_COLORS),
   healthCondition: z.enum(HEALTH_CONDITIONS),
