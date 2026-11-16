@@ -7,6 +7,14 @@ import type {
   PlantRecord,
 } from '../../src/domain/care/repositories';
 
+import type { Mailer, MailMessage } from '../../src/domain/notifications/ports';
+import { PetProgress } from '../../src/domain/pet/PetProgress';
+import type {
+  GameResultRepository,
+  PetProgressRepository,
+} from '../../src/domain/pet/repositories';
+import type { GameType, Reward } from '../../src/domain/pet/Rewards';
+
 export class FixedClock implements Clock {
   constructor(private current: Date) {}
 
@@ -54,4 +62,52 @@ export function buildPlant(overrides: Partial<PlantRecord> = {}): PlantRecord {
     latestHealthScore: null,
     ...overrides,
   };
+}
+
+export class InMemoryPetProgressRepository implements PetProgressRepository {
+  private readonly progress = new Map<string, PetProgress>();
+
+  constructor(
+    plantIds: string[] = ['plant-1'],
+    private readonly ownerId: string = OWNER_ID,
+  ) {
+    for (const id of plantIds) this.progress.set(id, PetProgress.initial());
+  }
+
+  async findForOwner(plantId: string, ownerId: string): Promise<PetProgress | null> {
+    if (ownerId !== this.ownerId) return null;
+    return this.progress.get(plantId) ?? null;
+  }
+
+  async save(plantId: string, _previous: PetProgress, next: PetProgress): Promise<void> {
+    this.progress.set(plantId, next);
+  }
+
+  current(plantId = 'plant-1'): PetProgress {
+    return this.progress.get(plantId)!;
+  }
+}
+
+export class InMemoryGameResultRepository implements GameResultRepository {
+  readonly results: { plantId: string; game: GameType; score: number; coins: number }[] = [];
+
+  async coinsEarnedSince(plantId: string): Promise<number> {
+    return this.results
+      .filter((result) => result.plantId === plantId)
+      .reduce((total, result) => total + result.coins, 0);
+  }
+
+  async record(plantId: string, game: GameType, score: number, reward: Reward): Promise<void> {
+    this.results.push({ plantId, game, score, coins: reward.coins });
+  }
+}
+
+export class FakeMailer implements Mailer {
+  readonly sent: MailMessage[] = [];
+  failFor: string | null = null;
+
+  async send(message: MailMessage): Promise<void> {
+    if (message.to === this.failFor) throw new Error('SMTP unavailable');
+    this.sent.push(message);
+  }
 }

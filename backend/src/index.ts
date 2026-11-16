@@ -1,5 +1,6 @@
 import { PrismaClient } from './generated/prisma/client.js';
 import { buildContainer } from './container';
+import { IntervalJob } from './infrastructure/scheduling/IntervalJob';
 import { createApp } from './presentation/http/app';
 import { config } from './shared/config';
 import { logger } from './shared/logger';
@@ -13,7 +14,13 @@ async function main(): Promise<void> {
     logger.info({ port: config.port, env: config.env }, 'PlantPulse API listening');
   });
 
+  const reminderJob = new IntervalJob('neglect-reminders', config.reminders.intervalMinutes, () =>
+    container.useCases.sendNeglectReminders.execute(),
+  );
+  if (config.reminders.enabled) reminderJob.start();
+
   const shutdown = (): void => {
+    reminderJob.stop();
     server.close(() => {
       void prisma.$disconnect().finally(() => process.exit(0));
     });

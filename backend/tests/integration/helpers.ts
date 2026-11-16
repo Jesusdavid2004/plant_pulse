@@ -4,9 +4,10 @@ import path from 'node:path';
 import sharp from 'sharp';
 import request from 'supertest';
 import type { Express } from 'express';
-import { buildContainer } from '../../src/container';
+import { buildContainer, type Container } from '../../src/container';
 import { PrismaClient } from '../../src/generated/prisma/client.js';
 import { FakeAIProvider } from '../../src/infrastructure/ai/FakeAIProvider';
+import { FakeMailer } from '../fakes/fakes';
 import { createApp } from '../../src/presentation/http/app';
 import { buildConfig } from '../../src/shared/config';
 import { CSRF_HEADER_NAME, CSRF_HEADER_VALUE } from '../../src/shared/constants';
@@ -19,6 +20,8 @@ export interface TestContext {
   app: Express;
   prisma: PrismaClient;
   aiProvider: FakeAIProvider;
+  mailer: FakeMailer;
+  container: Container;
   uploadDir: string;
   close: () => Promise<void>;
 }
@@ -37,8 +40,10 @@ export async function createTestContext(
   });
   const prisma = new PrismaClient();
   const aiProvider = new FakeAIProvider();
+  const mailer = new FakeMailer();
   const container = await buildContainer(prisma, config, {
     aiProvider,
+    mailer,
     passwordHashCost: TEST_HASH_COST,
   });
 
@@ -46,6 +51,8 @@ export async function createTestContext(
     app: createApp(container, config),
     prisma,
     aiProvider,
+    mailer,
+    container,
     uploadDir,
     close: async () => {
       await prisma.$disconnect();

@@ -17,6 +17,18 @@ const updatePlantSchema = z
     species: z.string().trim().max(MAX_NAME_LENGTH).nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0);
+const MAX_GAME_SCORE = 40;
+const gameResultSchema = z.object({
+  game: z.string().min(1).max(MAX_NAME_LENGTH),
+  score: z.number().int().min(0).max(MAX_GAME_SCORE),
+});
+const purchaseSchema = z.object({ pot: z.string().min(1).max(MAX_NAME_LENGTH) });
+const equipSchema = z
+  .object({
+    scene: z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+    pot: z.string().min(1).max(MAX_NAME_LENGTH).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0);
 const careSchema = z.object({ type: z.string().min(1).max(MAX_NAME_LENGTH) });
 
 export interface PlantRouterDependencies {
@@ -107,6 +119,47 @@ export function createPlantRouter({
     sendData(
       res,
       await useCases.getPlantMood.execute({ plantId: paramId(req), ownerId: currentUserId(res) }),
+    );
+  });
+
+  router.get('/:id/pet', async (req, res) => {
+    sendData(
+      res,
+      await useCases.getPetProfile.execute({ plantId: paramId(req), ownerId: currentUserId(res) }),
+    );
+  });
+
+  router.post('/:id/games', async (req, res) => {
+    const { game, score } = parseOrThrow(gameResultSchema, req.body);
+    const result = await useCases.submitGameResult.execute({
+      plantId: paramId(req),
+      ownerId: currentUserId(res),
+      game,
+      score,
+    });
+    sendData(res, result, HTTP_STATUS.CREATED);
+  });
+
+  router.post('/:id/pet/pots', async (req, res) => {
+    const { pot } = parseOrThrow(purchaseSchema, req.body);
+    const profile = await useCases.purchasePot.execute({
+      plantId: paramId(req),
+      ownerId: currentUserId(res),
+      pot,
+    });
+    sendData(res, profile, HTTP_STATUS.CREATED);
+  });
+
+  router.put('/:id/pet/equipment', async (req, res) => {
+    const { scene, pot } = parseOrThrow(equipSchema, req.body);
+    sendData(
+      res,
+      await useCases.equipCosmetics.execute({
+        plantId: paramId(req),
+        ownerId: currentUserId(res),
+        ...(scene !== undefined && { scene }),
+        ...(pot !== undefined && { pot }),
+      }),
     );
   });
 

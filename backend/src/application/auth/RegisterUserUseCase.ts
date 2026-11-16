@@ -2,12 +2,14 @@ import type { Clock } from '../../domain/care/repositories';
 import type { PasswordHasher, UserRepository } from '../../domain/auth/repositories';
 import type { AuthSession } from '../../domain/auth/types';
 import { EmailAlreadyRegisteredError } from '../../domain/errors';
+import type { Locale } from '../../shared/constants';
 import type { SessionIssuer } from './SessionIssuer';
 
 export interface RegisterUserInput {
   email: string;
   password: string;
   name: string | null;
+  locale: Locale;
 }
 
 export class RegisterUserUseCase {
@@ -23,7 +25,7 @@ export class RegisterUserUseCase {
     if (await this.users.findByEmail(email)) throw new EmailAlreadyRegisteredError();
 
     const passwordHash = await this.hasher.hash(input.password);
-    const user = await this.users.create(email, passwordHash, input.name);
+    const user = await this.users.create(email, passwordHash, input.name, input.locale);
     return this.sessions.issue(user, this.clock.now());
   }
 }

@@ -8,6 +8,7 @@ import {
   buildPlant,
   FixedClock,
   InMemoryCareEventRepository,
+  InMemoryPetProgressRepository,
   InMemoryPlantReader,
   OWNER_ID,
 } from '../fakes/fakes';
@@ -18,9 +19,11 @@ function setup(healthScore: number | null = null) {
   const plants = new InMemoryPlantReader([buildPlant({ latestHealthScore: healthScore })]);
   const careEvents = new InMemoryCareEventRepository();
   const clock = new FixedClock(NOW);
+  const progress = new InMemoryPetProgressRepository();
   return {
     careEvents,
-    logCare: new LogCareEventUseCase(plants, careEvents, clock),
+    progress,
+    logCare: new LogCareEventUseCase(plants, careEvents, progress, clock),
     getMood: new GetPlantMoodUseCase(plants, careEvents, clock),
   };
 }
@@ -52,6 +55,36 @@ describe('LogCareEventUseCase', () => {
       logCare.execute({ plantId: 'missing', ownerId: OWNER_ID, type: 'WATER' }),
     ).rejects.toBeInstanceOf(PlantNotFoundError);
     expect(careEvents.events).toHaveLength(0);
+  });
+});
+
+describe('care rewards', () => {
+  it('rewards real care with experience and coins', async () => {
+    const { logCare, progress } = setup();
+
+    const result = await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
+
+    expect(result.reward).toEqual({ xp: 10, coins: 5 });
+    expect(progress.current().coins).toBe(5);
+  });
+
+  it('does not reward repeating the same care again right away', async () => {
+    const { logCare, progress } = setup();
+
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
+    const second = await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
+
+    expect(second.reward).toEqual({ xp: 0, coins: 0 });
+    expect(progress.current().coins).toBe(5);
+  });
+
+  it('still rewards a different kind of care', async () => {
+    const { logCare } = setup();
+
+    await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'WATER' });
+    const sun = await logCare.execute({ plantId: 'plant-1', ownerId: OWNER_ID, type: 'SUN' });
+
+    expect(sun.reward.xp).toBeGreaterThan(0);
   });
 });
 

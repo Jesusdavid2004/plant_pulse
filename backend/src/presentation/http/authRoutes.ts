@@ -2,9 +2,14 @@ import { Router, type Request, type RequestHandler, type Response } from 'expres
 import { z } from 'zod';
 import type { Container } from '../../container';
 import type { AppConfig } from '../../shared/config';
-import { HTTP_STATUS, MILLISECONDS_PER_DAY, REFRESH_COOKIE_NAME } from '../../shared/constants';
+import {
+  HTTP_STATUS,
+  LOCALES,
+  MILLISECONDS_PER_DAY,
+  REFRESH_COOKIE_NAME,
+} from '../../shared/constants';
 import { requireAuth, requireCsrfHeader } from './middlewares';
-import { currentUserId, parseOrThrow, sendData } from './support';
+import { currentUserId, parseOrThrow, requestLocale, sendData } from './support';
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 72;
@@ -16,6 +21,13 @@ const registerSchema = z.object({
   password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
   name: z.string().trim().min(1).max(MAX_NAME_LENGTH).optional(),
 });
+const preferencesSchema = z
+  .object({
+    emailNotifications: z.boolean().optional(),
+    locale: z.enum(LOCALES).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0);
+const unsubscribeSchema = z.object({ token: z.string().min(1).max(2048) });
 const loginSchema = z.object({
   email: z.email().max(254),
   password: z.string().min(1).max(MAX_PASSWORD_LENGTH),
@@ -48,7 +60,11 @@ export function createAuthRouter(
 
   router.post('/register', authLimiter, async (req, res) => {
     const input = parseOrThrow(registerSchema, req.body);
-    const session = await useCases.registerUser.execute({ ...input, name: input.name ?? null });
+    const session = await useCases.registerUser.execute({
+      ...input,
+      name: input.name ?? null,
+      locale: requestLocale(req),
+    });
     setRefreshCookie(res, session.refreshToken);
     sendData(res, { user: session.user, accessToken: session.accessToken }, HTTP_STATUS.CREATED);
   });
@@ -75,6 +91,32 @@ export function createAuthRouter(
 
   router.get('/me', requireUser, async (_req, res) => {
     sendData(res, await useCases.getCurrentUser.execute({ userId: currentUserId(res) }));
+  });
+
+  router.patch('/me/preferences', requireUser, async (req, res) => {
+    const changes = parseOrThrow(preferencesSchema, req.body);
+    sendData(
+      res,
+      await useCases.updatePreferences.execute({
+        userId: currentUserId(res),
+        changes: {
+          ...(changes.emailNotifications !== undefined && {
+            emailNotifications: changes.emailNotifications,
+          }),
+          ...(changes.locale !== undefined && { locale: changes.locale }),
+        },
+      }),
+    );
+  });
+
+  router.post('/me/test-email', requireUser, authLimiter, async (_req, res) => {
+    await useCases.sendTestEmail.execute({ userId: currentUserId(res) });
+    res.status(HTTP_STATUS.NO_CONTENT).end();
+  });
+
+  router.post('/unsubscribe', authLimiter, async (req, res) => {
+    await useCases.unsubscribeFromReminders.execute(parseOrThrow(unsubscribeSchema, req.body));
+    res.status(HTTP_STATUS.NO_CONTENT).end();
   });
 
   router.delete('/me', requireUser, async (_req, res) => {

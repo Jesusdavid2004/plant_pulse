@@ -17,6 +17,24 @@ import { ListPlantsUseCase } from './application/plants/ListPlantsUseCase';
 import { RegisterPlantWithPhotoUseCase } from './application/plants/RegisterPlantWithPhotoUseCase';
 import { UpdatePlantUseCase } from './application/plants/UpdatePlantUseCase';
 import type { AIProvider } from './domain/ai/AIProvider';
+import { GetPetProfileUseCase } from './application/pet/GetPetProfileUseCase';
+import { EquipCosmeticsUseCase, PurchasePotUseCase } from './application/pet/CustomizePetUseCases';
+import { SubmitGameResultUseCase } from './application/pet/SubmitGameResultUseCase';
+import { SendNeglectRemindersUseCase } from './application/notifications/SendNeglectRemindersUseCase';
+import {
+  SendTestEmailUseCase,
+  UnsubscribeFromRemindersUseCase,
+  UpdateNotificationPreferencesUseCase,
+} from './application/notifications/NotificationPreferencesUseCases';
+import type { Mailer } from './domain/notifications/ports';
+import { JwtUnsubscribeTokenService } from './infrastructure/mail/JwtUnsubscribeTokenService';
+import { LocalizedReminderComposer } from './infrastructure/mail/LocalizedReminderComposer';
+import { createMailer } from './infrastructure/mail/mailers';
+import {
+  PrismaGameResultRepository,
+  PrismaPetProgressRepository,
+} from './infrastructure/prisma/PrismaPetRepositories';
+import { PrismaReminderAudienceRepository } from './infrastructure/prisma/PrismaReminderAudienceRepository';
 import type { ImageProcessor, ImageStorage } from './domain/ai/repositories';
 import type { AccessTokenService } from './domain/auth/repositories';
 import type { PhotoRepository } from './domain/plants/repositories';
@@ -48,6 +66,7 @@ export interface ContainerOverrides {
   aiProvider?: AIProvider;
   imageStorage?: ImageStorage;
   imageProcessor?: ImageProcessor;
+  mailer?: Mailer;
   passwordHashCost?: number;
 }
 
@@ -64,6 +83,7 @@ function buildUseCases(deps: {
   aiProvider: AIProvider;
   imageStorage: ImageStorage;
   imageProcessor: ImageProcessor;
+  mailer: Mailer;
   accessTokens: AccessTokenService;
   timingEqualizerHash: string;
   passwordHasher: BcryptPasswordHasher;
@@ -79,6 +99,10 @@ function buildUseCases(deps: {
   const photos = new PrismaPhotoRepository(prisma);
   const careEvents = new PrismaCareEventRepository(prisma);
   const plantReader = new PrismaPlantReader(prisma);
+  const petProgress = new PrismaPetProgressRepository(prisma);
+  const gameResults = new PrismaGameResultRepository(prisma);
+  const reminderComposer = new LocalizedReminderComposer();
+  const unsubscribeTokens = new JwtUnsubscribeTokenService(config.auth.jwtSecret);
   const analyzer = new PlantPhotoAnalyzer(
     deps.aiProvider,
     deps.imageProcessor,
@@ -119,7 +143,28 @@ function buildUseCases(deps: {
       imageStorage,
     ),
     checkupPlant: new CheckupPlantUseCase(analyzer, plants, analyses, photos, imageStorage),
-    logCareEvent: new LogCareEventUseCase(plantReader, careEvents, clock),
+    logCareEvent: new LogCareEventUseCase(plantReader, careEvents, petProgress, clock),
+    getPetProfile: new GetPetProfileUseCase(petProgress, gameResults, clock),
+    submitGameResult: new SubmitGameResultUseCase(petProgress, gameResults, clock),
+    purchasePot: new PurchasePotUseCase(petProgress, gameResults, clock),
+    equipCosmetics: new EquipCosmeticsUseCase(petProgress, gameResults, clock),
+    updatePreferences: new UpdateNotificationPreferencesUseCase(users),
+    unsubscribeFromReminders: new UnsubscribeFromRemindersUseCase(users, unsubscribeTokens),
+    sendTestEmail: new SendTestEmailUseCase(
+      users,
+      deps.mailer,
+      reminderComposer,
+      unsubscribeTokens,
+      config.appUrl,
+    ),
+    sendNeglectReminders: new SendNeglectRemindersUseCase(
+      new PrismaReminderAudienceRepository(prisma),
+      deps.mailer,
+      reminderComposer,
+      unsubscribeTokens,
+      clock,
+      config.appUrl,
+    ),
     getPlantMood: new GetPlantMoodUseCase(plantReader, careEvents, clock),
   };
 }
@@ -143,6 +188,7 @@ export async function buildContainer(
       overrides.aiProvider ?? createAIProvider(config, new PrismaAiCacheRepository(prisma)),
     imageStorage,
     imageProcessor: overrides.imageProcessor ?? new SharpImageProcessor(),
+    mailer: overrides.mailer ?? createMailer(config),
     accessTokens,
     timingEqualizerHash: await passwordHasher.hash(TIMING_EQUALIZER_PASSWORD),
     passwordHasher,

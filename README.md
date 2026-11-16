@@ -106,6 +106,12 @@ Defined and validated in `backend/src/shared/config.ts`. See `backend/.env.examp
 | `AI_DAILY_QUOTA_PER_USER`                 | AI analyses allowed per user per day                             |
 | `RATE_LIMIT_*`                            | Requests per window for auth, AI and general endpoints           |
 | `MAX_FILE_SIZE` / `UPLOAD_DIR`            | Upload size limit and private photo directory                    |
+| `APP_URL`                                 | Public URL of the web app, used for links inside emails          |
+| `MAIL_TRANSPORT` / `MAIL_FROM`            | `smtp`, `file` (HTML previews in `MAIL_PREVIEW_DIR`) or `none`   |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | SMTP server for reminder emails                                  |
+| `SMTP_USER` / `SMTP_PASSWORD`             | SMTP credentials                                                 |
+| `REMINDERS_ENABLED`                       | Turns the neglect reminder job on or off                         |
+| `REMINDER_CHECK_INTERVAL_MINUTES`         | How often the job looks for neglected plants (default 60)        |
 
 Secrets live only in environment variables. Never commit a real `.env`.
 
@@ -128,7 +134,25 @@ All responses use `{ success, data }`. Errors use `{ success: false, code, messa
 | `POST /api/plants/:id/care`      | Log WATER, SUN or FERTILIZE                              |
 | `GET /api/plants/:id/mood`       | Mood of the character computed from care and health      |
 | `GET /api/plants/:id/photos/:photoId` | Stream a photo (owner only)                         |
+| `GET /api/plants/:id/pet`        | Level, experience, coins, scenes and pots of the character |
+| `POST /api/plants/:id/games`     | Submit a mini-game score (rewards are computed server side) |
+| `POST /api/plants/:id/pet/pots`  | Buy a pot with coins                                     |
+| `PUT /api/plants/:id/pet/equipment` | Equip an unlocked scene or an owned pot               |
+| `PATCH /api/auth/me/preferences` | Turn reminder emails on or off and set the email language |
+| `POST /api/auth/me/test-email`   | Send a test email to the signed in user                  |
+| `POST /api/auth/unsubscribe`     | One click unsubscribe with the signed token from an email |
 | `GET /health`                    | Health check                                             |
+
+### Interaction and reminders
+
+- **Progress**: real care (water, sun, fertilizer) gives experience and coins, with a cooldown so spamming a
+  button gives nothing. Levels unlock scenes (living room, garden, night sky, beach, greenhouse).
+- **Mini-games**: catch the drops and memory match. The server clamps the score, computes the reward and caps the
+  coins a plant can earn per day, so a forged score cannot farm rewards. Coins buy pots.
+- **Reminders**: a job (`IntervalJob`) runs every `REMINDER_CHECK_INTERVAL_MINUTES`, finds users whose plants are
+  sad or sick (domain rule `isNeglected`), and sends one localized digest email per user, at most once every 24 hours.
+  Emails carry a signed one click unsubscribe link. Plant names are HTML-escaped. With `MAIL_TRANSPORT=file` the
+  emails are saved as HTML files so you can preview them without an SMTP server.
 
 ## Security
 
@@ -187,3 +211,8 @@ cuenta.
 - **Pruebas**: `npm test` dentro de `backend` (usa una base de datos de pruebas real).
 - **Railway**: crea PostgreSQL, el servicio del backend (Root Directory `backend`) y el del frontend; define
   `BACKEND_URL` en el frontend y las variables del backend indicadas arriba.
+- **Interacción**: el cuidado real da experiencia y monedas; los niveles desbloquean escenarios y las monedas
+  compran macetas. Hay dos minijuegos (atrapa las gotas y memoria) cuyo puntaje valida el servidor.
+- **Recordatorios por correo**: si una planta está triste o enferma, el usuario recibe un correo (en su idioma,
+  máximo uno cada 24 horas) con enlace para darse de baja. Configura SMTP con las variables `SMTP_*` y
+  `MAIL_TRANSPORT=smtp`; en desarrollo los correos se guardan como archivos HTML.

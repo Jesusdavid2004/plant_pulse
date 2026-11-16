@@ -15,15 +15,18 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  name          String?
-  plants        Plant[]
-  refreshTokens RefreshToken[]
-  aiUsage       AiUsageLog[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  password           String
+  name               String?
+  locale             String         @default("en")
+  emailNotifications Boolean        @default(true)
+  lastReminderAt     DateTime?
+  plants             Plant[]
+  refreshTokens      RefreshToken[]
+  aiUsage            AiUsageLog[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 }
 
 model RefreshToken {
@@ -39,20 +42,26 @@ model RefreshToken {
 }
 
 model Plant {
-  id           String      @id @default(uuid())
+  id           String       @id @default(uuid())
   name         String
   species      String?
   commonName   String?
   careCategory String?
   petTraits    Json?
+  xp           Int          @default(0)
+  coins        Int          @default(0)
+  scene        String       @default("LIVING_ROOM")
+  pot          String       @default("TERRACOTTA")
+  unlockedPots String[]     @default(["TERRACOTTA"])
+  gameResults  GameResult[]
   userId       String
-  user         User        @relation(fields: [userId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
   images       Image[]
   analyses     Analysis[]
   careEvents   CareEvent[]
-  status       String      @default("active")
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  status       String       @default("active")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Image {
@@ -75,6 +84,24 @@ model Analysis {
   prognosis   String?
   carePlan    Json
   createdAt   DateTime @default(now())
+}
+
+enum GameType {
+  DROP_CATCH
+  MEMORY_MATCH
+}
+
+model GameResult {
+  id        String   @id @default(uuid())
+  plantId   String
+  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  game      GameType
+  score     Int
+  coins     Int
+  xp        Int
+  createdAt DateTime @default(now())
+
+  @@index([plantId, createdAt])
 }
 
 enum CareType {
