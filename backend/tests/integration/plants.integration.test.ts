@@ -55,7 +55,13 @@ describe('POST /api/plants (register a plant from a photo)', () => {
     const { plant, analysis, advice } = response.body.data;
     expect(plant.name).toBe('Monstera');
     expect(plant.species).toBe('Monstera deliciosa');
-    expect(plant.petTraits).toEqual({ leafShape: 'HEART', leafCount: 5 });
+    expect(plant.petTraits).toEqual({
+      leafShape: 'HEART',
+      leafCount: 5,
+      leafColor: 'DARK_GREEN',
+      bloomShape: 'NONE',
+      bloomColor: 'PINK',
+    });
     expect(analysis.healthScore).toBe(92);
     expect(analysis.status).toBe('healthy');
     expect(advice.length).toBeGreaterThan(0);

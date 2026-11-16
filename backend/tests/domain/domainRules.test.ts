@@ -67,10 +67,12 @@ describe('assessHealth', () => {
 });
 
 describe('PetTraits', () => {
+  const roundTraits = { ...DEFAULT_PET_TRAITS, leafShape: 'ROUND' } as const;
+
   it('clamps the number of leaves to what the character can draw', () => {
-    expect(buildPetTraits('ROUND', 1).leafCount).toBe(MIN_LEAF_COUNT);
-    expect(buildPetTraits('ROUND', 30).leafCount).toBe(MAX_LEAF_COUNT);
-    expect(buildPetTraits('ROUND', 4.6).leafCount).toBe(5);
+    expect(buildPetTraits({ ...roundTraits, leafCount: 1 }).leafCount).toBe(MIN_LEAF_COUNT);
+    expect(buildPetTraits({ ...roundTraits, leafCount: 30 }).leafCount).toBe(MAX_LEAF_COUNT);
+    expect(buildPetTraits({ ...roundTraits, leafCount: 4.6 }).leafCount).toBe(5);
   });
 
   it('falls back to default traits for corrupted stored data', () => {
@@ -79,8 +81,20 @@ describe('PetTraits', () => {
     expect(parsePetTraits({ leafShape: 'SPIKY', leafCount: 'many' })).toEqual(DEFAULT_PET_TRAITS);
   });
 
-  it('keeps valid stored traits', () => {
+  it('keeps valid stored traits including color and bloom', () => {
+    const stored = {
+      leafShape: 'GRASS',
+      leafCount: 6,
+      leafColor: 'DARK_GREEN',
+      bloomShape: 'SPIKE',
+      bloomColor: 'PINK',
+    };
+    expect(parsePetTraits(stored)).toEqual(stored);
+  });
+
+  it('upgrades traits stored before color and bloom existed', () => {
     expect(parsePetTraits({ leafShape: 'SPIKY', leafCount: 6 })).toEqual({
+      ...DEFAULT_PET_TRAITS,
       leafShape: 'SPIKY',
       leafCount: 6,
     });
