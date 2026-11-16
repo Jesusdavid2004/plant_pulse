@@ -54,3 +54,6 @@ coverage/
 
 # Frontend lives in its own repo (Plant_pulse_fronent)
 frontend/
+
+# Local email previews
+backend/tmp/

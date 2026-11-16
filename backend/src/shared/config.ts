@@ -15,6 +15,8 @@ const DEFAULT_AI_RATE_LIMIT = 10;
 const DEFAULT_GENERAL_RATE_LIMIT = 300;
 const MIN_JWT_SECRET_LENGTH = 32;
 const DEFAULT_TRUST_PROXY_HOPS = 1;
+const DEFAULT_SMTP_PORT = 587;
+const DEFAULT_REMINDER_INTERVAL_MINUTES = 60;
 
 const booleanFromString = z.enum(['true', 'false']).transform((value) => value === 'true');
 
@@ -42,6 +44,21 @@ const envSchema = z.object({
   AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(DEFAULT_AI_MAX_OUTPUT_TOKENS),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(DEFAULT_AI_TIMEOUT_MS),
   AI_DAILY_QUOTA_PER_USER: z.coerce.number().int().positive().default(DEFAULT_AI_DAILY_QUOTA),
+  APP_URL: z.string().min(1).default('http://localhost:5173'),
+  MAIL_TRANSPORT: z.enum(['smtp', 'file', 'none']).default('file'),
+  MAIL_FROM: z.string().min(1).default('PlantPulse <no-reply@plantpulse.local>'),
+  MAIL_PREVIEW_DIR: z.string().default('./tmp/mail'),
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.coerce.number().int().positive().default(DEFAULT_SMTP_PORT),
+  SMTP_SECURE: booleanFromString.default(false),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASSWORD: z.string().default(''),
+  REMINDERS_ENABLED: booleanFromString.default(true),
+  REMINDER_CHECK_INTERVAL_MINUTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(DEFAULT_REMINDER_INTERVAL_MINUTES),
   RATE_LIMIT_AUTH_PER_15_MIN: z.coerce.number().int().positive().default(DEFAULT_AUTH_RATE_LIMIT),
   RATE_LIMIT_AI_PER_MIN: z.coerce.number().int().positive().default(DEFAULT_AI_RATE_LIMIT),
   RATE_LIMIT_GENERAL_PER_MIN: z.coerce
@@ -83,6 +100,23 @@ export function buildConfig(source: NodeJS.ProcessEnv) {
       maxOutputTokens: env.AI_MAX_OUTPUT_TOKENS,
       timeoutMs: env.AI_TIMEOUT_MS,
       dailyQuotaPerUser: env.AI_DAILY_QUOTA_PER_USER,
+    },
+    appUrl: env.APP_URL,
+    mail: {
+      transport: env.MAIL_TRANSPORT,
+      from: env.MAIL_FROM,
+      previewDir: env.MAIL_PREVIEW_DIR,
+      smtp: {
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        secure: env.SMTP_SECURE,
+        user: env.SMTP_USER,
+        password: env.SMTP_PASSWORD,
+      },
+    },
+    reminders: {
+      enabled: env.REMINDERS_ENABLED,
+      intervalMinutes: env.REMINDER_CHECK_INTERVAL_MINUTES,
     },
     rateLimit: {
       authPer15Min: env.RATE_LIMIT_AUTH_PER_15_MIN,
